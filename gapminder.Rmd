@@ -1,0 +1,95 @@
+---
+title: "Gráficos Interactivos"
+output: html_notebook
+---
+```{r}
+#install.packages("dplyr")
+#install.packages("ggplot2")
+#install.packages("colorspace")
+#install.packages("httpuv")
+
+```
+
+Analizo los datos del dataset _Gapminder_
+
+```{r}
+
+# Leo el dataset gapminder
+gapminder <- read.csv("https://raw.githubusercontent.com/cienciadedatos/datos-de-miercoles/master/datos/2019/2019-04-24/gapminder_es.csv")
+
+# Visualizo como comienza
+head(gapminder)
+
+```
+
+Explicación de cada una de las columnas de este dataset se puede encontrar [aquí](https://github.com/cienciadedatos/datos-de-miercoles/tree/master/datos/2019/2019-04-24)
+
+### Análisis exploratorio
+
+Este dataset no posee valores nulos
+
+```{r}
+# Cantidad de valores nulos de dataset
+
+sum(is.na(gapminder))
+```
+
+### Density plot
+
+```{r}
+
+# Boxplot
+library(dplyr)
+gap <- gapminder %>%
+  filter(continente == "Americas")
+
+
+ggplot(data = gap)+
+  ?geom_boxplot()
+
+
+```
+
+
+
+```{r}
+
+unique(gapminder$continente)
+
+library(dplyr)
+gap <- gapminder %>%
+  filter(continente == "Americas")
+
+library(ggplot2)
+graf_1 <- ggplot(data = gap)+
+  geom_raster(aes(x = anio , y = pais , fill = esperanza_de_vida))+
+  xlab("año")+
+  ylab("país")+
+  theme_bw()
+
+library(plotly)
+ggplotly(graf_1)
+```
+
+
+
+```{r}
+shinyApp(
+
+  ui = fluidPage(
+    selectInput("region", "Region:",
+                choices = colnames(pais)),
+    plotOutput("phonePlot")
+  ),
+
+  server = function(input, output) {
+    output$phonePlot = renderPlot({
+      barplot(WorldPhones[,input$region]*1000,
+              ylab = "Number of Telephones", xlab = "Year")
+    })
+  },
+
+  options = list(height = 500)
+)
+```
+
