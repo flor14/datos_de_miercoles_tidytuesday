@@ -1,0 +1,178 @@
+---
+title: "Gráficos interactivos y animaciones en R"
+output:
+  html_document:
+    df_print: paged
+---
+```{r message=FALSE, warning=FALSE, include=FALSE}
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("colorspace")
+install.packages("httpuv")
+install.packages("plotly", dependencies = TRUE)
+install.packages("gganimate")
+install.packages("gifski")
+install.packages("rstan")
+install.packages("hrbrthemes")
+install.packages("stringr")
+
+
+```
+------
+
+Analizo los datos del dataset _Gapminder_. Una explicación de cada una de las columnas de este dataset se puede encontrar [aquí](https://github.com/cienciadedatos/datos-de-miercoles/tree/master/datos/2019/2019-04-24).
+
+
+```{r echo=FALSE}
+
+# Leo el dataset gapminder
+gapminder <- read.csv("https://raw.githubusercontent.com/cienciadedatos/datos-de-miercoles/master/datos/2019/2019-04-24/gapminder_es.csv")
+
+# Visualizo como comienza
+head(gapminder)
+
+```
+
+
+-----
+
+### Plotly
+
+
+* Plotly te permite revelar valores del gráfico a medida que pasas el cursor por el mismo.
+
+* Ejemplos de lo que se puede hacer empleando este paquete [aquí](https://plot.ly/r/).
+
+-----
+
+*Gráfico 1*  En el heatmap se observa la esperanza de vida por año para los países de América siendo más fácil comparar entre grupos.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(plotly)
+
+gedad <- gapminder %>%
+  filter(continente == "Americas")
+ 
+
+plot_ly(
+    x = gedad$anio, 
+    y = factor(gedad$pais),
+    z = gedad$esperanza_de_vida, 
+    type = "heatmap", 
+    text = gapminder$texto) %>%
+    layout(title = "Esperanza de vida por país (1950-2007)")
+   
+
+```
+
+*Gráfico 2* Gráfico de caja de las distribuciones de los valores de esperanza de vida en período estudiado (1950-2007) para cada continente.
+
+Observamos que los datos que quedaron por fuera de los cuartiles del boxplot en cuanto al límite inferior solieron corresponder a países con baja esperanza de vida como Haití al principio de la serie temporal. Como sabemos que la esperanza de vida aumento a lo largo del tiempo esto es dentro de todo un resultado que no sorprende.
+
+Es notorio el caso de Africa que en el limite inferior del boxplot muestra un único dato sospechoso de ser atípico que ocurrió en el año 1992 en Ruanda, que represento una esperanza de vida de 23.56 años. Este dato sería candidato a ser removido, pero no podemos descartar que algún [un evento como el genocidio en Ruanda](https://es.wikipedia.org/wiki/Genocidio_de_Ruanda#Las_v%C3%ADctimas) haya afectado la disminución en la esperanza de vida. En particular, nos llama la atención este [gráfico](https://es.wikipedia.org/wiki/Genocidio_de_Ruanda#Las_v%C3%ADctimas).
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+### Boxplot
+
+gapminder$texto <- paste("Esperanza de vida: " ,                                                    round(gapminder$esperanza_de_vida, digits = 2),
+                         " años, Año: ",
+                         gapminder$anio,
+                         ", Pais: ",
+                         gapminder$pais,
+                         sep="")
+
+# Boxplot
+
+library(plotly)
+plot_ly(x = factor(gapminder$continente),
+        y = gapminder$esperanza_de_vida,
+        type = "box",
+        name = "Gráfico de caja",
+        boxpoints = "outliers",
+        text = gapminder$texto) %>%
+layout(title = "Esperanza de Vida por Continente (1950-2007)",
+       yaxis = list(title = "Años"))
+
+```
+
+------
+
+### Gganimate
+
+
+* Gganimate es un paquete que te permite animar tus gráficos. 
+
+* Ejemplos de lo que puede realizarse con este paquete [aquí](https://gganimate.com/)
+
+-------
+
+Se observan los 5 países con mayor PIB per capita por año en el periodo estudiado.
+
+Kuwait aparece como uno de los mayores países con PIB per capita al principio de la serie temporal. Hasta 1982 este país estuvo entre los más ricos del mundo. Tal vez la bajada posterior pueda tener que ver con una  [crisis económica](https://en.wikipedia.org/wiki/Kuwait) que se desata a partir de 1982 (Ver en shiny app)
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+# librerìas
+
+library(dplyr)
+library(gganimate)
+
+
+pib <- gapminder %>%  
+         group_by(anio) %>%
+         mutate(rank = min_rank(-pib_per_capita) * 1,  
+                Value_rel = pib_per_capita/pib_per_capita[rank==1],
+  Value_lbl = paste0(" ", round(pib_per_capita/1e9)) # redondeo
+  ) %>%
+  filter(rank <= 5)   
+
+library(stringr)
+gapminder$pais <- str_replace(gapminder$pais,"Estados Unidos de America", "Estados Unidos")
+
+barras <- ggplot(pib, aes(rank, group = pais, 
+                     fill = as.factor(pais), color = as.factor(pais))) +
+  geom_tile(aes(y = pib_per_capita/2,
+                height = pib_per_capita,
+                width = 0.9), alpha = 0.8, color = NA) +
+  geom_text(aes(y = 0, label = paste(pais, " ")), vjust = 0.2, hjust = 1)+ 
+  geom_text(aes(y = pib_per_capita,label = Value_lbl, hjust=0))+
+  coord_flip(clip = "off", expand = FALSE) + 
+  scale_x_reverse() + 
+  guides(color = FALSE, fill = FALSE) +
+  labs(title = 'Año: {closest_state}', 
+       x = "", 
+       y = "PIB per cápita",
+       caption = "Dataset Gapminder") +
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0, size = 22),
+        axis.ticks.y = element_blank(),  
+        axis.text.y  = element_blank(), 
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        plot.margin = margin(1,1,1,4, "cm")) +
+  transition_states(anio, transition_length = 3,state_length = 1)
+
+animate(barras) 
+
+```
+------
+
+### Shiny app
+
+* Shiny te permite modificar los datos o las variables elegidas para el análisis y observar el efecto en los gráficos de forma instantanea.
+
+* Más ejemplos de shiny apps [aquí](https://shiny.rstudio.com/gallery/)
+
+----------
+
+En el caso de esta aplicación permite visualizar el cambio a traves de los años y comparar entre países las siguientes variables
+
+* PIB en el tiempo (por pais)
+* Esperanza de Vida (por pais)
+* Población (Por país)
+
+¡Proba por tu cuenta en el link! *https://flor.shinyapps.io/gapminder/*
