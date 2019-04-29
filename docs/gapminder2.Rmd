@@ -1,0 +1,88 @@
+---
+title: "Dos gráficos interactivos del dataset Gapminder"
+output:
+  html_document:
+  df_print: paged
+---
+  ```{r message=FALSE, warning=FALSE, include=FALSE}
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("plotly", dependencies = TRUE)
+```
+------
+  
+  Analizo los datos del dataset _Gapminder_. Una explicación de cada una de las columnas de este dataset se puede encontrar [aquí](https://github.com/cienciadedatos/datos-de-miercoles/tree/master/datos/2019/2019-04-24).
+
+
+```{r echo=FALSE}
+
+# Leo el dataset gapminder
+gapminder <- read.csv("https://raw.githubusercontent.com/cienciadedatos/datos-de-miercoles/master/datos/2019/2019-04-24/gapminder_es.csv")
+
+# Visualizo como comienza
+head(gapminder)
+
+```
+
+
+### Plotly
+
+
+* Plotly te permite revelar valores del gráfico a medida que pasas el cursor por el mismo.
+
+* Ejemplos de lo que se puede hacer empleando este paquete [aquí](https://plot.ly/r/).
+
+-----
+
+*Gráfico 1*  En el heatmap se observa la esperanza de vida por año para los países de América siendo más fácil comparar entre grupos.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(plotly)
+
+gedad <- gapminder %>%
+  filter(continente == "Americas")
+
+
+plot_ly(
+  x = gedad$anio, 
+  y = factor(gedad$pais),
+  z = gedad$esperanza_de_vida, 
+  type = "heatmap", 
+  text = gapminder$texto) %>%
+  layout(title = "Esperanza de vida por país (1952-2007)")
+
+```
+
+*Gráfico 2* Gráfico de caja de las distribuciones de los valores de esperanza de vida en período estudiado (1952-2007) para cada continente.
+
+Observamos que los datos que quedaron por fuera del boxplot para el límite inferior solieron corresponder a países con baja esperanza de vida como Haití. De contribuciones previas sabemos que la esperanza de vida aumento a lo largo del tiempo, por lo que Haití en 1952 sea un dato particularmente bajo es un resultado que no sorprende.
+
+Por otra parte es notorio el caso de África muestra un único dato bajo el límite inferior del boxplot que ocurrió en el año 1992 en Ruanda con una esperanza de vida de 23.56 años. Este dato sería candidato a ser removido, pero no podemos descartar que algún [un evento particular, como fue el genocidio en Ruanda](https://es.wikipedia.org/wiki/Genocidio_de_Ruanda) haya afectado la la esperanza de vida en este país. En particular, nos llama la atención este [gráfico](https://es.wikipedia.org/wiki/Genocidio_de_Ruanda#/media/File:Rwanda-demography.png).
+
+Los puntos que presentan una esperanza de vida mayor a la estimada dentro de la distribución del gráfico, ¿Podrían deberse a países que fueron colonias de otras potencias europeas? 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+### Boxplot
+
+gapminder$texto <- paste("Esperanza de vida: " ,                                                    round(gapminder$esperanza_de_vida, digits = 2),
+                         " años, Año: ",
+                         gapminder$anio,
+                         ", Pais: ",
+                         gapminder$pais,
+                         sep="")
+
+# Boxplot
+
+library(plotly)
+plot_ly(x = factor(gapminder$continente),
+        y = gapminder$esperanza_de_vida,
+        type = "box",
+        name = "Gráfico de caja",
+        boxpoints = "outliers",
+        text = gapminder$texto) %>%
+layout(title = "Esperanza de Vida por Continente (1952-2007)",
+       yaxis = list(title = "Años"))
+
+```
