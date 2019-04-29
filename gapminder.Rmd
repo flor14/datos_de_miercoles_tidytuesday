@@ -4,22 +4,23 @@ output:
   html_document:
     df_print: paged
 ---
-```{r include=FALSE}
-#install.packages("dplyr")
-#install.packages("ggplot2")
-#install.packages("colorspace")
-#install.packages("httpuv")
-#install.packages("plotly", dependencies = TRUE)
-#install.packages("gganimate")
-#install.packages("gifski")
-#install.packages("rstan")
-#install.packages("hrbrthemes")
-#install.packages("stringr")
+```{r message=FALSE, warning=FALSE, include=FALSE}
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("colorspace")
+install.packages("httpuv")
+install.packages("plotly", dependencies = TRUE)
+install.packages("gganimate")
+install.packages("gifski")
+install.packages("rstan")
+install.packages("hrbrthemes")
+install.packages("stringr")
 
 
 ```
+------
 
-Analizo los datos del dataset _Gapminder_. Explicación de cada una de las columnas de este dataset se puede encontrar [aquí](https://github.com/cienciadedatos/datos-de-miercoles/tree/master/datos/2019/2019-04-24).
+Analizo los datos del dataset _Gapminder_. Una explicación de cada una de las columnas de este dataset se puede encontrar [aquí](https://github.com/cienciadedatos/datos-de-miercoles/tree/master/datos/2019/2019-04-24).
 
 
 ```{r echo=FALSE}
@@ -34,9 +35,11 @@ head(gapminder)
 
 
 -----
+
 ### Plotly
 
-* *Plotly* te permite revelar los valores involucrados en el gráfico a medida que pasas el cursos por el mismo.
+
+* Plotly te permite revelar valores del gráfico a medida que pasas el cursor por el mismo.
 
 * Ejemplos de lo que se puede hacer empleando este paquete [aquí](https://plot.ly/r/).
 
@@ -44,9 +47,10 @@ head(gapminder)
 
 En el heatmap se observa la esperanza de vida por año para los países de América siendo más fácil comparar entre grupos.
 
-```{r}
-library(plotly)
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(dplyr)
+library(ggplot2)
+library(plotly)
 
 gedad <- gapminder %>%
   filter(continente == "Americas")
@@ -70,7 +74,7 @@ En cuanto a los datos atípicos, observamos que para el limite inferior estos da
 Es notorio el caso de Ruanda en Africa ya que la edad más baja tanto de la población de dicho país y del continente ocurrió en el año 1992 con 23.56 años y no al rededor de 1950, al principio de la serie temporal. Este dato es candidato a ser removido, pero no podemos descartar q
 
 
-```{r echo=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 ### Boxplot
 
 gapminder$texto <- paste("Esperanza de vida: " ,                                                    round(gapminder$esperanza_de_vida, digits = 2),
@@ -95,19 +99,21 @@ layout(title = "Esperanza de Vida por Continente (1950-2007)",
 ```
 
 ------
+
 ### Gganimate
 
-* *Gganimate* es un paquete que te permite animar tus gráficos. 
+
+* Gganimate es un paquete que te permite animar tus gráficos. 
 
 * Ejemplos de lo que puede realizarse con este paquete [aquí](https://gganimate.com/)
 
 -------
 
-Se observan los 5 países con mayor PIB por año en el periodo estudiado.
+Se observan los 5 países con mayor PIB per capita por año en el periodo estudiado.
 
-Kuwait aparece como uno de los mayores países con PIB per capita al principio de la serie temporal. Hasta 1982 este país estuvo entre los más ricos del mundo. Tal vez la bajada posterior pueda tener que ver con una  [crisis económica](https://en.wikipedia.org/wiki/Kuwait#1962%E2%80%931982_(Prosperity_and_growing_poverty) que se desata a partir de 1982 (Ver en shiny app)
+Kuwait aparece como uno de los mayores países con PIB per capita al principio de la serie temporal. Hasta 1982 este país estuvo entre los más ricos del mundo. Tal vez la bajada posterior pueda tener que ver con una  [crisis económica](https://en.wikipedia.org/wiki/Kuwait) que se desata a partir de 1982 (Ver en shiny app)
 
-```{r echo=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE}
 
 # librerìas
 
@@ -124,7 +130,7 @@ pib <- gapminder %>%
   filter(rank <= 5)   
 
 library(stringr)
-str_replace(gapminder$pais,"Estados Unidos de America", "Estados Unidos")
+gapminder$pais <- str_replace(gapminder$pais,"Estados Unidos de America", "Estados Unidos")
 
 barras <- ggplot(pib, aes(rank, group = pais, 
                      fill = as.factor(pais), color = as.factor(pais))) +
@@ -148,8 +154,7 @@ barras <- ggplot(pib, aes(rank, group = pais,
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
         plot.margin = margin(1,1,1,4, "cm")) +
-  transition_states(anio, transition_length = 3,state_length = 1)+
-  transition_time(anio)
+  transition_states(anio, transition_length = 3,state_length = 1)
 
 animate(barras) 
 
@@ -158,7 +163,7 @@ animate(barras)
 
 ### Shiny app
 
-* *Shiny* te permite modificar tanto las variables como otras caracteristicas y observar el efecto en los gráficos de forma instantanea.
+* Shiny te permite modificar los datos o las variables elegidas para el análisis y observar el efecto en los gráficos de forma instantanea.
 
 * Más ejemplos de shiny apps [aquí](https://shiny.rstudio.com/gallery/)
 
@@ -170,6 +175,4 @@ En el caso de esta aplicación permite visualizar el cambio a traves de los año
 * Esperanza de Vida (por pais)
 * Población (Por país)
 
-¡Proba por tu cuenta!
-
-*https://flor.shinyapps.io/gapminder/*
+¡Proba por tu cuenta en el link! *https://flor.shinyapps.io/gapminder/*
