@@ -71,7 +71,7 @@ En este caso analizamos mediante gráficos de caja las distribuciones de los val
 
 En cuanto a los datos atípicos, observamos que para el limite inferior estos datos solieron corresponder a países al principio de la serie temporal, lo cual es esperable sabiendo que existió un crecimiento a lo largo del tiempo.
 
-Es notorio el caso de Ruanda en Africa ya que la edad más baja tanto de la población de dicho país y del continente ocurrió en el año 1992 con 23.56 años y no al rededor de 1950, al principio de la serie temporal. Este dato es candidato a ser removido, pero no podemos descartar q
+Es notorio el caso de Ruanda en Africa ya que la edad más baja tanto de la población de dicho país y del continente ocurrió en el año 1992 con 23.56 años y no en la década del 50, al principio de la serie temporal. Este dato es candidato a ser removido, pero no pdoeos descartar que algo haya ocurrido en este año que produzca dicha tasa de mortalidad.
 
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
